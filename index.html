@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>17天搞定GRE单词背诵计划时间表生成器</title>
+    <script src="./lib/vue.min.js"></script>
+    <style>
+      #output td, #output th {
+	  border: 1px solid black;
+	  padding: 0 1em 0 1em;
+      }
+      #output {
+	  border-collapse: collapse;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>{{ title }}</h1>
+      <table id="output">
+	<tr>
+	  <th v-for="day in daysAWeek">{{ day }}</th>
+	</tr>
+	<tbody v-for="week in calendar">
+	  <tr>
+	    <th v-for="day in week">{{ day.date }}</th>
+	  </tr>
+	  <tr>
+	    <td v-for="day in week">
+	      <div v-for="list in day.lists">{{ list }}</div>
+	    </td>
+	  </tr>
+	</tbody>
+      </table>
+      <table>
+	<tr><th>计划名</th><td><input id="plan" v-model="title"></td></tr>
+	<tr><th>List 名</th><td><input id="book" v-model="prefix"></td></tr>
+	<tr><th>开始日期</th><td><input id="startDate" type="date" v-model="date"></td></tr>
+        <tr><th>每天 List 数</th><td><input id="listPerDay" type="number" v-model="listPerDay"></td></tr>
+	<tr><th>List 总数</th><td><input id="totalList" type="number" v-model="listTotal"></td></tr>
+	<tr><th>是否逆序</th><td><input id="reverse" type="checkbox" v-model="reversed"></td></tr>
+	<tr><th></th><td><button id="generate" v-on:click="generate">点击这里生成</button></td></tr>
+      </table>
+    </div>
+    <script>
+      var app = new Vue({
+          el: '#app',
+	  data: {
+	      // daysAWeek could mismatch the local date as some machines may use Monday as the start of the week? Should be rewritten. 
+	      daysAWeek: ['Sun', 'Mon', 'Tue', 'Wed', 'Thr', 'Fri', 'Sat'],
+	      title: '背单词计划表',
+	      prefix: 'L',
+	      date: (new Date()).toISOString().split('T')[0],
+	      listPerDay: 2,
+	      listTotal: 42,
+	      reversed: false,
+	      calendar: [],
+	  },
+	  methods: {
+	      generate: function() {
+		  function increaseDate(date, days) {
+		      const msPerDay = 24 * 60 * 60 * 1000;
+		      return new Date(date.getTime() + days * msPerDay);
+		  }
+		  function getCalendar(startDate, duration) {
+		      var calendarStartDate = increaseDate(startDate, - startDate.getDay());
+		      var startIndex = startDate.getDay();
+		      var calendarDuration = startIndex + duration;
+		      var calendar = [];
+		      var weekTotal = Math.ceil(calendarDuration / 7);
+		      for(var week = 0, date = calendarStartDate; week < weekTotal ; week++) {
+			  var weekCalendar = [];
+			  for(var day = 0; day < 7; day++, date = increaseDate(date, 1)) {
+			      weekCalendar.push({
+				  date: '' + (date.getMonth() + 1) + '/' + date.getDate(),
+				  lists: [],
+			      });
+			  }
+			  calendar.push(weekCalendar);
+		      }
+		      calendar.getDay = function(index) {
+			  var absIndex = startIndex + index;
+			  return calendar[(absIndex - (absIndex % 7)) / 7][absIndex % 7];
+		      };
+		      return calendar;
+		  }
+		  var startDate = new Date(Date.parse(this.date));
+		  if(this.listPerDay <= 0) {
+		      alert('"每天 List 数" 应为正整数! ;)');
+		      return;
+		  }
+		  var daysTotal = Math.ceil(this.listTotal / this.listPerDay) + 25;
+		  if(daysTotal > 300) {
+		      alert('额这... 暂不支持时长一年的计划表');
+		      return;
+		  }
+		  var newCalendar = getCalendar(startDate, daysTotal);
+		  for(var i = 0; i < Math.ceil(this.listTotal / this.listPerDay); i++) {
+		      var groupString;
+		      if(this.reversed) {
+			  groupString = '' + Math.max(1, this.listTotal - (i + 1) * this.listPerDay + 1) + '~' + (this.listTotal - i * this.listPerDay);
+		      } else {
+			  groupString = '' + (i * this.listPerDay + 1) + '~' + Math.min(this.listTotal, (i + 1) * this.listPerDay);
+		      }
+		      newCalendar.getDay(i).lists.unshift(this.prefix + groupString);
+		      for(var period of [1, 3, 7, 14, 25]) {
+			  newCalendar.getDay(i + period).lists.push(this.prefix + '* ' + groupString);
+		      }
+		  }
+		  this.calendar = newCalendar;
+	      }
+	  }
+     });
+</script>
+
+  </body>
+</html>
