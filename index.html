@@ -38,10 +38,11 @@
         <tr><th>每天 List 数</th><td><input id="listPerDay" type="number" v-model="listPerDay"></td></tr>
 	<tr><th>List 总数</th><td><input id="totalList" type="number" v-model="listTotal"></td></tr>
 	<tr><th>是否逆序</th><td><input id="reverse" type="checkbox" v-model="reversed"></td></tr>
+	<tr><th>跳过第n天(请用 ',' 分隔)</th><td><input id="skip" type="text" placeholder="是不是尽量不要跳过会好一点呢?" v-model="skipString"></td></tr>
 	<tr><th></th><td><button id="generate" v-on:click="generate">点击这里生成</button></td></tr>
 	<tr><th></th><td>
 	    源网页 <a href='https://exam4.us'>exam4.us</a>, 有人搬到了 Github 上: <a href='https://github.com/17GRE/17GRE'>17GRE</a>. 本网页是从该 GitHub 项目 fork 过来的 <a href='https://github.com/GuDzpoz/17GRE'>forked 17GRE</a>. <br/>
-	    想要打印的话, 现在可以直接把表格复制到表格软件 (Microsoft Excel, LibreOffice Calc 等) 里面再编辑打印了.
+	    想要打印的话, 现在可以直接把表格复制到表格软件 (Microsoft Excel, LibreOffice Calc 等) 里面再编辑打印了. 或者您也可以直接将网页加入收藏夹, 网页会在再次打开时自动重新生成您的计划表. 
 	</td></tr>
       </table>
     </div>
@@ -57,8 +58,9 @@
 	      listPerDay: 2,
 	      listTotal: 42,
 	      reversed: false,
+	      skipString: '',
 	      calendar: [],
-	      match: ["title", "prefix", "date", "listPerDay", "listTotal", "reversed"]
+	      match: ["title", "prefix", "date", "listPerDay", "listTotal", "reversed", "skipString"]
 	  },
 	  created: function() {
 	      var url = new URL(window.location);
@@ -121,17 +123,40 @@
 		      alert('额这... 暂不支持时长一年的计划表');
 		      return;
 		  }
-		  var newCalendar = getCalendar(startDate, daysTotal);
-		  for(var i = 0; i < Math.ceil(this.listTotal / this.listPerDay); i++) {
+		  var skip = [];
+		  for(var i of this.skipString.split(',')) {
+		      var number = new Number(i);
+		      if(isFinite(number)) {
+			  if(number > 0) {
+			      skip.push(Math.ceil(number));
+			  } else {
+			      // ignore for convevience
+			      // alert('"' + i + '": 日期应为正整数!');
+			      // return;
+			  }
+		      } else {
+			  // ignore for convenience
+			  // alert('请检查一下是否输错了: "' + i + '"');
+			  // return;
+		      }
+		  }
+		  var newCalendar = getCalendar(startDate, daysTotal + skip.length);
+		  for(var i = 0, skipped = 0; i < Math.ceil(this.listTotal / this.listPerDay); i++) {
 		      var groupString;
+		      if(skip.length != 0) {
+			  if(i + 1 == skip[0]) {
+			      skip.shift();
+			      skipped++;
+			  }
+		      }
 		      if(this.reversed) {
 			  groupString = '' + Math.max(1, this.listTotal - (i + 1) * this.listPerDay + 1) + '~' + (this.listTotal - i * this.listPerDay);
 		      } else {
 			  groupString = '' + (i * this.listPerDay + 1) + '~' + Math.min(this.listTotal, (i + 1) * this.listPerDay);
 		      }
-		      newCalendar.getDay(i).lists.unshift(this.prefix + groupString);
+		      newCalendar.getDay(i + skipped).lists.unshift(this.prefix + groupString);
 		      for(var period of [0, 1, 3, 7, 14, 25]) {
-			  newCalendar.getDay(i + period).lists.push(this.prefix + '* ' + groupString);
+			  newCalendar.getDay(i + skipped + period).lists.push(this.prefix + '* ' + groupString);
 		      }
 		  }
 		  this.calendar = newCalendar;
