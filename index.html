@@ -58,8 +58,32 @@
 	      listTotal: 42,
 	      reversed: false,
 	      calendar: [],
+	      match: ["title", "prefix", "date", "listPerDay", "listTotal", "reversed"]
+	  },
+	  created: function() {
+	      var url = new URL(window.location);
+	      for(var i of this.match) {
+		  var value = url.searchParams.get(i);
+		  if(value != undefined) {
+		      this[i] = value;
+		  }
+	      }
+	      if(this.reversed === 'true') {
+		  this.reversed = true;
+	      } else {
+		  this.reversed = false;
+	      }
+	      window.addEventListener('popstate', this.created);
+	      this.generate();
 	  },
 	  methods: {
+	      updateURL: function() {
+		  var url = new URL(window.location);
+		  for(var i of this.match) {
+		      url.searchParams.set(i, this[i]);
+		  }
+		  window.history.pushState("", this.title, url.href);
+	      },
 	      generate: function() {
 		  function increaseDate(date, days) {
 		      const msPerDay = 24 * 60 * 60 * 1000;
@@ -111,6 +135,7 @@
 		      }
 		  }
 		  this.calendar = newCalendar;
+		  this.updateURL();
 	      }
 	  }
      });
