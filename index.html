@@ -15,7 +15,7 @@
   </head>
   <body>
     <div id="app">
-      <h1>{{ title }}</h1>
+      <h1 v-title>{{ title }}</h1>
       <table id="output">
 	<tr>
 	  <th v-for="day in daysAWeek">{{ day }}</th>
@@ -61,6 +61,11 @@
 	      skipString: '',
 	      calendar: [],
 	      match: ["title", "prefix", "date", "listPerDay", "listTotal", "reversed", "skipString"]
+	  },
+	  watch: {
+	      title: function(val, old) {
+		  document.title = val;
+	      }
 	  },
 	  created: function() {
 	      var url = new URL(window.location);
@@ -140,11 +145,12 @@
 			  // return;
 		      }
 		  }
+		  skip = skip.sort();
 		  var newCalendar = getCalendar(startDate, daysTotal + skip.length);
 		  for(var i = 0, skipped = 0; i < Math.ceil(this.listTotal / this.listPerDay); i++) {
 		      var groupString;
 		      if(skip.length != 0) {
-			  if(i + 1 == skip[0]) {
+			  while(i + 1 + skipped == skip[0]) {
 			      skip.shift();
 			      skipped++;
 			  }
