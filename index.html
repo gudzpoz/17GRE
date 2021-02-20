@@ -11,6 +11,9 @@
       #output {
 	  border-collapse: collapse;
       }
+      #output tr td div {
+          display: inline;
+      }
       #app {
           margin-left: 2%;
           margin-right: 2%;
@@ -46,7 +49,7 @@
 	      </tr>
 	      <tr>
 	        <td v-for="day in week">
-	          <div v-for="list in day.lists">{{ list }}</div>
+	          <div v-for="list in day.lists">{{ list }}<br></div>
 	        </td>
 	      </tr>
 	    </tbody>
