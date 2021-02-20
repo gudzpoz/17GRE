@@ -26,7 +26,7 @@
       #form input {
           max-width: 12em;
       }
-      #license {
+      #notes, #license {
           max-width: 20em;
       }
     </style>
@@ -61,12 +61,16 @@
             <tr><th>每天 List 数</th><td><input id="listPerDay" type="number" v-model="listPerDay"></td></tr>
 	    <tr><th>List 总数</th><td><input id="totalList" type="number" v-model="listTotal"></td></tr>
 	    <tr><th>是否逆序</th><td><input id="reverse" type="checkbox" v-model="reversed"></td></tr>
+	    <tr><th>（可选）自定义复习安排(请用 ',' 分隔)</th><td><input id="intervals" type="text" v-model="intervalsString" :placeholder="intervals.join(',')"></td></tr>
 	    <tr><th>跳过第n天的新词(请用 ',' 分隔)</th><td><input id="skip" type="text" placeholder="是不是尽量不要跳过会好一点呢?" v-model="skipString"></td></tr>
 	    <tr><th></th><td><button id="generate" v-on:click="generate">点击这里生成</button></td></tr>
           </table>
+          <p id="notes">
+            自定义复习安排：默认为 0,1,3,7,14,29：意为学习新列表的当日（0）复习，学习后的第1、3、7、14、29天分别复习；也即同一个列表两次复习的间隔依次为1、2、4、7、15天（此为 <a href='https://exam4.us'>exam4.us</a> 的默认安排）。您也可以按此规律对复习安排进行自己的调整。
+          </p>
 	  <p id="license">
-	    源网页 <a href='https://exam4.us'>exam4.us</a>, 有人搬到了 Github 上: <a href='https://github.com/17GRE/17GRE'>17GRE</a>. 本网页是从该 GitHub 项目 fork 过来的 <a href='https://github.com/GuDzpoz/17GRE'>forked 17GRE</a>. <br/>
-	    想要打印的话, 现在可以直接把表格复制到表格软件 (Microsoft Excel, LibreOffice Calc 等) 里面再编辑打印了. 或者您也可以直接将网页加入收藏夹, 网页会在再次打开时自动重新生成您的计划表. 
+	    源网页 <a href='https://exam4.us'>exam4.us</a>，有人搬到了 Github 上：<a href='https://github.com/17GRE/17GRE'>17GRE</a>。本网页是从该 GitHub 项目 fork 过来的 <a href='https://github.com/GuDzpoz/17GRE'>forked 17GRE</a>。<br/>
+	    想要打印的话，现在可以直接把表格复制到表格软件（Microsoft Excel、LibreOffice Calc 等）再编辑打印了。或者您也可以直接将网页加入收藏夹，网页会在再次打开时自动重新生成您的计划表。
 	  </p>
         </div>
       </div>
@@ -87,7 +91,9 @@
               date: (new Date()).toISOString().split("T")[0],
               listPerDay: 2,
               listTotal: 42,
+              intervals: [0, 1, 3, 7, 14, 29],
               reversed: false,
+              intervalsString: "",
               skipString: "",
               calendar: [],
               match: [
@@ -97,6 +103,7 @@
                   "listPerDay",
                   "listTotal",
                   "reversed",
+                  "intervalsString",
                   "skipString"
               ]
           },
@@ -161,7 +168,19 @@
                       alert("\"每天 List 数\" 应为正整数! ;)");
                       return;
                   }
-                  var daysTotal = Math.ceil(this.listTotal / this.listPerDay) + 25;
+                  var customIntervals = [];
+                  for(var i of this.intervalsString.split(",")) {
+                      var number = new Number(i);
+                      if(isFinite(number)) {
+                          if(number >= 0) {
+                              customIntervals.push(Math.ceil(number));
+                          }
+                      }
+                  }
+                  if(customIntervals.length > 0) {
+                      this.intervals = customIntervals;
+                  }
+                  var daysTotal = Math.ceil(this.listTotal / this.listPerDay) + Math.max(...this.intervals);
                   if(daysTotal > 300) {
                       alert("额这... 暂不支持时长一年的计划表");
                       return;
@@ -203,7 +222,7 @@
                               + "~" + Math.min(this.listTotal, (i + 1) * this.listPerDay);
                       }
                       newCalendar.getDay(i + skipped).lists.unshift(this.prefix + groupString);
-                      for(var period of [0, 1, 3, 7, 14, 25]) {
+                      for(var period of this.intervals) {
                           newCalendar.getDay(i + skipped + period).lists.push(this.prefix + "* " + groupString);
                       }
                   }
