@@ -61,7 +61,7 @@
             <tr><th>每天 List 数</th><td><input id="listPerDay" type="number" v-model="listPerDay"></td></tr>
 	    <tr><th>List 总数</th><td><input id="totalList" type="number" v-model="listTotal"></td></tr>
 	    <tr><th>是否逆序</th><td><input id="reverse" type="checkbox" v-model="reversed"></td></tr>
-	    <tr><th>（可选）自定义复习安排(请用 ',' 分隔)</th><td><input id="intervals" type="text" v-model="intervalsString" :placeholder="intervals.join(',')"></td></tr>
+	    <tr><th>（可选）自定义复习安排(请用 ',' 分隔)</th><td><input id="intervals" type="text" v-model="intervalsString" :placeholder="defaultIntervals.join(',')"></td></tr>
 	    <tr><th>跳过第n天的新词(请用 ',' 分隔)</th><td><input id="skip" type="text" placeholder="是不是尽量不要跳过会好一点呢?" v-model="skipString"></td></tr>
 	    <tr><th></th><td><button id="generate" v-on:click="generate">点击这里生成</button></td></tr>
           </table>
@@ -80,6 +80,7 @@
           navigator.serviceWorker.register("./sw.js");
       }
 
+      const defaultIntervals = [0, 1, 3, 7, 14, 29];
       var app = new Vue({
           el: "#app",
           data: {
@@ -91,7 +92,8 @@
               date: (new Date()).toISOString().split("T")[0],
               listPerDay: 2,
               listTotal: 42,
-              intervals: [0, 1, 3, 7, 14, 29],
+              defaultIntervals: defaultIntervals,
+              intervals: defaultIntervals,,
               reversed: false,
               intervalsString: "",
               skipString: "",
@@ -170,7 +172,7 @@
                   }
                   var customIntervals = [];
                   for(var i of this.intervalsString.split(",")) {
-                      var number = new Number(i);
+                      var number = parseInt(i);
                       if(isFinite(number)) {
                           if(number >= 0) {
                               customIntervals.push(Math.ceil(number));
