@@ -1,0 +1,28 @@
+#output td, #output th {
+	border: 1px solid black;
+	padding: 0 1em 0 1em;
+}
+#output {
+	border-collapse: collapse;
+}
+#output tr td div {
+    display: inline;
+}
+#app {
+    margin-left: 2%;
+    margin-right: 2%;
+}
+.flex {
+    display: flex;
+    column-gap: 5%;
+    flex-flow: row wrap;
+}
+#form th {
+    max-width: 8em;
+}
+#form input {
+    max-width: 12em;
+}
+#notes, #license {
+    max-width: 20em;
+}

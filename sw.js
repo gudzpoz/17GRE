@@ -1,7 +1,9 @@
-var cacheName = "17grePWA-v0.0.5";
+var cacheName = "17grePWA-v0.1.0";
 var cacheContents = [
     "./",
     "./index.html",
+    "./index.js",
+    "./index.css",
     "./lib/vue.min.js"
 ];
 

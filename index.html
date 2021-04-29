@@ -2,242 +2,108 @@
   <head>
     <meta charset="UTF-8" />
     <title>17天搞定GRE单词背诵计划时间表生成器</title>
-    <script src="./lib/vue.min.js"></script>
-    <style>
-      #output td, #output th {
-	  border: 1px solid black;
-	  padding: 0 1em 0 1em;
-      }
-      #output {
-	  border-collapse: collapse;
-      }
-      #output tr td div {
-          display: inline;
-      }
-      #app {
-          margin-left: 2%;
-          margin-right: 2%;
-      }
-      .flex {
-          display: flex;
-          column-gap: 5%;
-          flex-flow: row wrap;
-      }
-      #form th {
-          max-width: 8em;
-      }
-      #form input {
-          max-width: 12em;
-      }
-      #notes, #license {
-          max-width: 20em;
-      }
-    </style>
+    <link rel="stylesheet" href="index.css" />
   </head>
   <body>
     <div id="app">
-      <h1 v-title>{{ title }}</h1>
+      <h1>{{ title }}</h1>
       <div class="flex">
         <div>
           <table id="output">
-	    <tr>
-	      <th v-for="day in daysAWeek">{{ day }}</th>
-	    </tr>
-	    <tbody v-for="week in calendar">
-	      <tr>
-	        <th v-for="day in week">{{ day.date }}</th>
-	      </tr>
-	      <tr>
-	        <td v-for="day in week">
-	          <div v-for="list in day.lists">{{ list }}<br></div>
-	        </td>
-	      </tr>
-	    </tbody>
+	        <tr>
+	          <th v-for="weekdayName in weekdayNames">{{ weekdayName }}</th>
+	        </tr>
+	        <tbody v-for="week in weeks">
+	          <tr>
+	            <th v-for="day in week">
+                  <div v-if="day">
+                    {{ (day.date.getMonth() + 1) + "/" + day.date.getDate() }}
+                  </div>
+                </th>
+	          </tr>
+	          <tr>
+	            <td v-for="day in week">
+                  <div v-if="day">
+	                <div v-for="list in day.lists.newLists" :class="list">
+                      {{ newListPrefix + " " + list }}<br>
+                    </div>
+	                <div v-for="list in day.lists.reviewLists" :class="list">
+                      {{ reviewListPrefix + " " + list }}<br>
+                    </div>
+                  </div>
+	            </td>
+	          </tr>
+	        </tbody>
           </table>
-          <div><p>注：星号（*）标记着本日应复习的 List. </p></div>
+          <div><p>注：星号（*）标记着本日应复习的 List。</p></div>
         </div>
         <div>
           <table id="form">
-	    <tr><th>计划名</th><td><input id="plan" v-model="newTitle"></td></tr>
-	    <tr><th>List 名</th><td><input id="book" v-model="prefix"></td></tr>
-	    <tr><th>开始日期</th><td><input id="startDate" type="date" v-model="date"></td></tr>
-            <tr><th>每天 List 数</th><td><input id="listPerDay" type="number" v-model="listPerDay"></td></tr>
-	    <tr><th>List 总数</th><td><input id="totalList" type="number" v-model="listTotal"></td></tr>
-	    <tr><th>是否逆序</th><td><input id="reverse" type="checkbox" v-model="reversed"></td></tr>
-	    <tr><th>（可选）自定义复习安排(请用 ',' 分隔)</th><td><input id="intervals" type="text" v-model="intervalsString" :placeholder="defaultIntervals.join(',')"></td></tr>
-	    <tr><th>跳过第n天的新词(请用 ',' 分隔)</th><td><input id="skip" type="text" placeholder="是不是尽量不要跳过会好一点呢?" v-model="skipString"></td></tr>
-	    <tr><th></th><td><button id="generate" v-on:click="generate">点击这里生成</button></td></tr>
+	        <tr><th>计划名</th>
+              <td><input id="plan"
+                         v-model="newParameters.title">
+            </td></tr>
+	        <tr><th>List 名</th>
+              <td><input id="book"
+                         v-model="newParameters.prefix">
+            </td></tr>
+	        <tr><th>开始日期</th>
+              <td><input id="startDate"
+                         type="date"
+                         v-model="displayedDate">
+            </td></tr>
+            <tr><th>每天 List 数</th>
+              <td><input id="listPerDay"
+                         type="number"
+                         v-model="newParameters.listPerDay">
+            </td></tr>
+	        <tr><th>List 总数</th>
+              <td><input id="totalList"
+                         type="number"
+                         v-model="newParameters.listTotal">
+            </td></tr>
+	        <tr><th>是否逆序</th>
+              <td><input id="reverse"
+                         type="checkbox"
+                         v-model="newParameters.reversed">
+            </td></tr>
+	        <tr><th>周一为每周第一天</th>
+              <td><input id="mondayFirst"
+                         type="checkbox"
+                         v-model="monday">
+            </td></tr>
+	        <tr><th>（可选）自定义复习安排(请用 ',' 分隔)</th>
+              <td><input id="intervals"
+                         type="text"
+                         v-model="displayedIntervals"
+                         :placeholder="greIntervals.join(',')">
+            </td></tr>
+	        <tr><th>跳过第n天的新词(请用 ',' 分隔)</th>
+              <td><input id="skip"
+                         type="text"
+                         placeholder="是不是尽量不要跳过会好一点呢?"
+                         v-model="displayedSkippedDates">
+            </td></tr>
+	        <tr><th></th><td><button id="generate"
+                                     v-on:click="userCommit">
+                  点击这里生成</button></td></tr>
           </table>
           <p id="notes">
             自定义复习安排：默认为 0,1,3,7,14,29：意为学习新列表的当日（0）复习，学习后的第1、3、7、14、29天分别复习；也即同一个列表两次复习的间隔依次为1、2、4、7、15天（此为 <a href='https://exam4.us'>exam4.us</a> 的默认安排）。您也可以按此规律对复习安排进行自己的调整。
           </p>
-	  <p id="license">
-	    源网页 <a href='https://exam4.us'>exam4.us</a>，有人搬到了 Github 上：<a href='https://github.com/17GRE/17GRE'>17GRE</a>。本网页是从该 GitHub 项目 fork 过来的 <a href='https://github.com/GuDzpoz/17GRE'>forked 17GRE</a>。<br/>
-	    想要打印的话，现在可以直接把表格复制到表格软件（Microsoft Excel、LibreOffice Calc 等）再编辑打印了。或者您也可以直接将网页加入收藏夹，网页会在再次打开时自动重新生成您的计划表。
-	  </p>
+	      <p id="license">
+	        源网页 <a href='https://exam4.us'>exam4.us</a>，有人搬到了 Github 上：<a href='https://github.com/17GRE/17GRE'>17GRE</a>。本网页是从该 GitHub 项目 fork 过来的 <a href='https://github.com/GuDzpoz/17GRE'>forked 17GRE</a>。<br/>
+	        想要打印的话，现在可以直接把表格复制到表格软件（Microsoft Excel、LibreOffice Calc 等）再编辑打印了。或者您也可以直接将网页加入收藏夹，网页会在再次打开时自动重新生成您的计划表。
+	      </p>
         </div>
       </div>
     </div>
+    <script src="./lib/vue.global.prod.js"></script>
     <script>
       if("serviceWorker" in navigator) {
           navigator.serviceWorker.register("./sw.js");
       }
-
-      const defaultIntervals = [0, 1, 3, 7, 14, 29];
-      var app = new Vue({
-          el: "#app",
-          data: {
-              // daysAWeek could mismatch the local date as some machines may use Monday as the start of the week? Should be rewritten. 
-              daysAWeek: ["Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat"],
-              title: "背单词计划表",
-              newTitle: "背单词计划表",
-              prefix: "L",
-              date: (new Date()).toISOString().split("T")[0],
-              listPerDay: 2,
-              listTotal: 42,
-              defaultIntervals: defaultIntervals,
-              intervals: defaultIntervals,
-              reversed: false,
-              intervalsString: "",
-              skipString: "",
-              calendar: [],
-              match: [
-                  "title",
-                  "prefix",
-                  "date",
-                  "listPerDay",
-                  "listTotal",
-                  "reversed",
-                  "intervalsString",
-                  "skipString"
-              ]
-          },
-          watch: {
-              title: function(val, old) {
-                  document.title = val;
-              }
-          },
-          created: function() {
-              var url = new URL(window.location);
-              for(var i of this.match) {
-                  var value = url.searchParams.get(i);
-                  if(value != undefined) {
-                      this[i] = value;
-                  }
-              }
-              if(this.reversed === "true") {
-                  this.reversed = true;
-              } else {
-                  this.reversed = false;
-              }
-              window.addEventListener("popstate", this.created);
-              this.generate();
-          },
-          methods: {
-              updateURL: function() {
-                  var url = new URL(window.location);
-                  for(var i of this.match) {
-                      url.searchParams.set(i, this[i]);
-                  }
-                  window.history.pushState("", this.title, url.href);
-              },
-              generate: function() {
-                  function increaseDate(date, days) {
-                      const msPerDay = 24 * 60 * 60 * 1000;
-                      return new Date(date.getTime() + days * msPerDay);
-                  }
-                  function getCalendar(startDate, duration) {
-                      var calendarStartDate = increaseDate(startDate, - startDate.getDay());
-                      var startIndex = startDate.getDay();
-                      var calendarDuration = startIndex + duration;
-                      var calendar = [];
-                      var weekTotal = Math.ceil(calendarDuration / 7);
-                      for(var week = 0, date = calendarStartDate; week < weekTotal ; week++) {
-                          var weekCalendar = [];
-                          for(var day = 0; day < 7; day++, date = increaseDate(date, 1)) {
-                              weekCalendar.push({
-                                  date: "" + (date.getMonth() + 1) + "/" + date.getDate(),
-                                  lists: [],
-                              });
-                          }
-                          calendar.push(weekCalendar);
-                      }
-                      calendar.getDay = function(index) {
-                          var absIndex = startIndex + index;
-                          return calendar[(absIndex - (absIndex % 7)) / 7][absIndex % 7];
-                      };
-                      return calendar;
-                  }
-                  var startDate = new Date(Date.parse(this.date));
-                  if(this.listPerDay <= 0) {
-                      alert("\"每天 List 数\" 应为正整数! ;)");
-                      return;
-                  }
-                  var customIntervals = [];
-                  for(var i of this.intervalsString.split(",")) {
-                      var number = parseInt(i);
-                      if(isFinite(number)) {
-                          if(number >= 0) {
-                              customIntervals.push(Math.ceil(number));
-                          }
-                      }
-                  }
-                  if(customIntervals.length > 0) {
-                      this.intervals = customIntervals;
-                  }
-                  var daysTotal = Math.ceil(this.listTotal / this.listPerDay) + Math.max(...this.intervals);
-                  if(daysTotal > 300) {
-                      alert("额这... 暂不支持时长一年的计划表");
-                      return;
-                  }
-                  var skip = [];
-                  for(var i of this.skipString.split(",")) {
-                      var number = new Number(i);
-                      if(isFinite(number)) {
-                          if(number > 0) {
-                              skip.push(Math.ceil(number));
-                          } else {
-                              // ignore for convevience
-                              // alert("\"" + i + "\": 日期应为正整数!");
-                              // return;
-                          }
-                      } else {
-                          // ignore for convenience
-                          // alert("请检查一下是否输错了: \"" + i + "\"");
-                          // return;
-                      }
-                  }
-                  skip = skip.sort();
-                  var newCalendar = getCalendar(startDate, daysTotal + skip.length);
-                  for(var i = 0, skipped = 0; i < Math.ceil(this.listTotal / this.listPerDay); i++) {
-                      var groupString;
-                      if(skip.length != 0) {
-                          while(i + 1 + skipped == skip[0]) {
-                              skip.shift();
-                              skipped++;
-                          }
-                      }
-                      if(this.reversed) {
-                          groupString = ""
-                              + Math.max(1, this.listTotal - (i + 1) * this.listPerDay + 1)
-                              + "~" + (this.listTotal - i * this.listPerDay);
-                      } else {
-                          groupString = ""
-                              + (i * this.listPerDay + 1)
-                              + "~" + Math.min(this.listTotal, (i + 1) * this.listPerDay);
-                      }
-                      newCalendar.getDay(i + skipped).lists.unshift(this.prefix + groupString);
-                      for(var period of this.intervals) {
-                          newCalendar.getDay(i + skipped + period).lists.push(this.prefix + "* " + groupString);
-                      }
-                  }
-                  this.title = this.newTitle;
-                  this.calendar = newCalendar;
-                  this.updateURL();
-              }
-          }
-     });
-</script>
-
+    </script>
+    <script src="index.js"></script>
   </body>
 </html>
