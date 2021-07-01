@@ -24,10 +24,10 @@
 	          <tr>
 	            <td v-for="day in week">
                   <div v-if="day">
-	                <div v-for="list in day.lists.newLists" :class="list">
+	                <div v-for="list in day.lists.newLists" :class="'c' + list.replace('~', '')">
                       {{ newListPrefix + " " + list }}<br>
                     </div>
-	                <div v-for="list in day.lists.reviewLists" :class="list">
+	                <div v-for="list in day.lists.reviewLists" :class="'c' + list.replace('~', '')">
                       {{ reviewListPrefix + " " + list }}<br>
                     </div>
                   </div>
@@ -66,6 +66,11 @@
               <td><input id="reverse"
                          type="checkbox"
                          v-model="newParameters.reversed">
+            </td></tr>
+	        <tr><th>是否自动上色</th>
+              <td><input id="colored"
+                         type="checkbox"
+                         v-model="newParameters.colored">
             </td></tr>
 	        <tr><th>周一为每周第一天</th>
               <td><input id="mondayFirst"

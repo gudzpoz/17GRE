@@ -16,6 +16,7 @@ const app = {
       weekdayNames: [],
       newParameters: {
       },
+      stylesheet: null,
       // Table parameters
       parameters: {
         date: new Date(),
@@ -26,6 +27,7 @@ const app = {
         listTotal: 42,
         listPerDay: 2,
         reversed: false,
+        colored: false,
         intervals: [],
         skippedDates: [],
       },
@@ -47,7 +49,6 @@ const app = {
                )
       },
       set (dateString) {
-        console.log(dateString)
         this.parameters.date = new Date(dateString)
       },
     },
@@ -131,12 +132,18 @@ const app = {
     normalizeIntegersString (arrayString) {
       try {
         var array = JSON.parse('[' + arrayString + ']')
-        if(Array.isArray(array) && array.reduce((allNumber, value) => {
-          return allNumber && Number.isInteger(value) && value >= 0
-        })) {
-          return array
+        if(Array.isArray(array)) {
+          if(array.length === 0) {
+            return array
+          } else if(array.reduce((allNumber, value) => {
+            return allNumber && Number.isInteger(value) && value >= 0
+          })) {
+            return array
+          } else {
+            return undefined
+          }
         } else {
-          return false
+          return undefined
         }
       } catch (e) {
         return undefined
@@ -149,6 +156,13 @@ const app = {
           parameters.reversed = true
         } else {
           parameters.reversed = false
+        }
+      }
+      if(typeof(parameters.colored) === 'string') {
+        if(parameters.colored === "true") {
+          parameters.colored = true
+        } else {
+          parameters.colored = false
         }
       }
       parameters.date = new Date(parameters.date)
@@ -170,6 +184,8 @@ const app = {
       parameters.intervals = this.normalizeIntegersString(parameters.intervals)
       if(!parameters.intervals) {
         delete parameters.intervals
+      } else if(parameters.intervals.length === 0) {
+        parameters.intervals = defaultIntervals
       }
       parameters.skippedDates = this.normalizeIntegersString(parameters.skippedDates)
       if(!parameters.skippedDates) {
@@ -234,7 +250,6 @@ const app = {
       var offset = 0
       for(var i = 0; i != lists.length; ++i) {
         if(skippedDates.includes(i + offset + 1)) {
-          console.log(i, offset, skippedDates)
           --i
           ++offset
           continue
@@ -292,6 +307,20 @@ const app = {
       return lists
     },
 
+    generateRandomStyles (lists) {
+      if(!this.style) {
+        this.stylesheet = document.createElement('style')
+        document.body.appendChild(this.stylesheet)
+      }
+      var stylesheet = document.styleSheets[document.styleSheets.length-1]
+      for(var i = 0; i != lists.length; ++i) {
+        stylesheet.insertRule(
+          '.c' + lists[i].replace('~', '') +
+            ' { background-color: hsl(' + ((i * 97) % 360) + ', 100%, 80%);}',
+          0)
+      }
+    },
+
     update (parameters) {
       var lists = this.group(parameters.listTotal,
                              parameters.listPerDay,
@@ -317,6 +346,12 @@ const app = {
       this.reviewListPrefix = parameters.prefix + '*'
       this.weekdayNames = this.initWeekdayNames(parameters.week)
       this.weeks = weeks
+      if(parameters.colored) {
+        this.generateRandomStyles(lists)
+      } else if(this.stylesheet) {
+        this.stylesheet.remove()
+        this.stylesheet = null
+      }
       Object.assign(this.newParameters, this.parameters)
     },
   },
