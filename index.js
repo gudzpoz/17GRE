@@ -15,6 +15,7 @@ const app = {
       reviewListPrefix: '',
       weekdayNames: [],
       newParameters: {
+        date: new Date(),
       },
       stylesheet: null,
       // Table parameters
@@ -41,15 +42,15 @@ const app = {
 
     displayedDate: {
       get () {
-        return (this.parameters.date.getFullYear()
+        return (this.newParameters.date.getFullYear()
                 + '-'
-                + ('0' + (this.parameters.date.getMonth() + 1)).slice(-2)
+                + ('0' + (this.newParameters.date.getMonth() + 1)).slice(-2)
                 + '-'
-                + ('0' + this.parameters.date.getDate()).slice(-2)
+                + ('0' + this.newParameters.date.getDate()).slice(-2)
                )
       },
       set (dateString) {
-        this.parameters.date = new Date(dateString)
+        this.newParameters.date = new Date(dateString)
       },
     },
 
