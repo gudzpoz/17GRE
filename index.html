@@ -16,7 +16,8 @@
 	        <tbody v-for="week in weeks">
 	          <tr>
 	            <th v-for="day in week">
-                  <div v-if="day">
+                  <div v-if="day"
+                       :class="'d' + day.date.getFullYear() + '-' + (day.date.getMonth() + 1) + '-' + day.date.getDate()">
                     {{ (day.date.getMonth() + 1) + "/" + day.date.getDate() }}
                   </div>
                 </th>
@@ -71,6 +72,12 @@
               <td><input id="colored"
                          type="checkbox"
                          v-model="newParameters.colored">
+            </td></tr>
+            <tr><th>高亮今日</th>
+              <td><input id="today"
+                         type="checkbox"
+                         v-model="newParameters.today">
+                （视时区可能有差异）
             </td></tr>
 	        <tr><th>周一为每周第一天</th>
               <td><input id="mondayFirst"

@@ -21,6 +21,7 @@ const app = {
       // Table parameters
       parameters: {
         date: new Date(),
+        today: false,
         monday: false,
         week: 'Sun',
         title: '17天GRE单词背诵计划时间表',
@@ -166,6 +167,13 @@ const app = {
           parameters.colored = false
         }
       }
+      if(typeof(parameters.today) === 'string') {
+        if(parameters.today === "true") {
+          parameters.today = true
+        } else {
+          parameters.today = false
+        }
+      }
       parameters.date = new Date(parameters.date)
       if(Number.isNaN(parameters.date.getTime())) {
         delete parameters.date
@@ -308,16 +316,25 @@ const app = {
       return lists
     },
 
-    generateRandomStyles (lists) {
-      if(!this.style) {
-        this.stylesheet = document.createElement('style')
-        document.body.appendChild(this.stylesheet)
-      }
+    generateStyles (lists, parameters) {
+      this.stylesheet = document.createElement('style')
+      document.body.appendChild(this.stylesheet)
       var stylesheet = document.styleSheets[document.styleSheets.length-1]
-      for(var i = 0; i != lists.length; ++i) {
+      if(parameters.colored) {
+        for(var i = 0; i != lists.length; ++i) {
+          stylesheet.insertRule(
+            '.c' + lists[i].replace('~', '') +
+              ' { background-color: hsl(' + ((i * 97) % 360) + ', 100%, 80%); }',
+            0)
+        }
+      }
+      if(parameters.today) {
+        var today = new Date()
         stylesheet.insertRule(
-          '.c' + lists[i].replace('~', '') +
-            ' { background-color: hsl(' + ((i * 97) % 360) + ', 100%, 80%);}',
+          '.d' + today.getFullYear()
+            + '-' + (today.getMonth() + 1)
+            + '-' + today.getDate()
+            + ' { border: 3px dashed #ff00ff; background-color: yellow; }',
           0)
       }
     },
@@ -347,11 +364,12 @@ const app = {
       this.reviewListPrefix = parameters.prefix + '*'
       this.weekdayNames = this.initWeekdayNames(parameters.week)
       this.weeks = weeks
-      if(parameters.colored) {
-        this.generateRandomStyles(lists)
-      } else if(this.stylesheet) {
+      if(this.stylesheet) {
         this.stylesheet.remove()
         this.stylesheet = null
+      }
+      if(parameters.colored || parameters.today) {
+        this.generateStyles(lists, parameters)
       }
       Object.assign(this.newParameters, this.parameters)
     },
