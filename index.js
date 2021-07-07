@@ -18,6 +18,7 @@ const app = {
         date: new Date(),
       },
       stylesheet: null,
+      allowCustomFont: false,
       // Table parameters
       parameters: {
         date: new Date(),
@@ -32,6 +33,7 @@ const app = {
         colored: false,
         intervals: [],
         skippedDates: [],
+        font: '',
       },
     }
   },
@@ -328,6 +330,11 @@ const app = {
       this.stylesheet = document.createElement('style')
       document.body.appendChild(this.stylesheet)
       var stylesheet = document.styleSheets[document.styleSheets.length-1]
+      if(parameters.font) {
+        stylesheet.insertRule(
+          'html { font-family: ' + parameters.font + '; }',
+          0)
+      }
       if(parameters.colored) {
         for(var i = 0; i != lists.length; ++i) {
           stylesheet.insertRule(
@@ -388,12 +395,74 @@ const app = {
         this.stylesheet.remove()
         this.stylesheet = null
       }
-      if(parameters.colored || parameters.today) {
-        this.generateStyles(lists, parameters)
-      }
+      this.generateStyles(lists, parameters)
       Object.assign(this.newParameters, this.parameters)
     },
   },
 }
 
-Vue.createApp(app).mount('#app');
+const vueApp = Vue.createApp(app)
+vueApp.component('font-radios', {
+  props: {
+    modelValue: String,
+  },
+  data () {
+    return {
+      fontRadio: '',
+      customFont: '',
+      placeholder: 'placeholder-other-font',
+      fonts: [
+        'serif',
+        'sans-serif',
+      ],
+    }
+  },
+  watch: {
+    fontRadio (val) {
+      if(val !== this.placeholder) {
+        this.customFont = val
+      }
+    },
+    customFont (val) {
+      this.$emit('update:modelValue', val)
+    },
+    modelValue (val) {
+      if(this.fontRadio !== this.placeholder
+         && this.fontRadio !== val) {
+        if(this.fonts.includes(val)) {
+          this.fontRadio = val
+        } else {
+          this.fontRadio = this.placeholder
+        }
+      }
+      if(this.customFont !== val) {
+        this.customFont = val
+      }
+    },
+  },
+  computed: {
+  },
+  template: `
+<div v-for="font in fonts" :key="font" style="display: inline-block">
+  <input name="font-radio"
+         :id="font + '-radio'"
+         :value="font"
+         type="radio"
+         v-model="fontRadio">
+  <label :for="font + '-radio'" :style="'font-family: ' + font">
+    {{ font }}
+  </label>
+</div>
+<br>
+<div>
+  <input id="other-font-radio"
+         name="font-radio"
+         :value="placeholder"
+         type="radio"
+         v-model="fontRadio">
+  <label for="other-font-radio" :style="'font-family: ' + customFont">其它</label>
+  <input :disabled="fontRadio !== placeholder" v-model="customFont"
+         :style="'font-family: ' + customFont">
+</div>`
+})
+vueApp.mount('#app')

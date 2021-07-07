@@ -41,6 +41,7 @@
         </div>
         <div>
           <table id="form">
+            <tr><td></td><th><u><i>时间表选项</i></u></th></tr>
 	        <tr><th>计划名</th>
               <td><input id="plan"
                          v-model="newParameters.title">
@@ -69,17 +70,6 @@
                          type="checkbox"
                          v-model="newParameters.reversed">
             </td></tr>
-	        <tr><th>是否自动上色</th>
-              <td><input id="colored"
-                         type="checkbox"
-                         v-model="newParameters.colored">
-            </td></tr>
-            <tr><th>高亮今日</th>
-              <td><input id="today"
-                         type="checkbox"
-                         v-model="newParameters.today">
-                （视时区可能有差异）
-            </td></tr>
 	        <tr><th>周一为每周第一天</th>
               <td><input id="mondayFirst"
                          type="checkbox"
@@ -96,6 +86,22 @@
                          type="text"
                          placeholder="是不是尽量不要跳过会好一点呢?"
                          v-model="displayedSkippedDates">
+            </td></tr>
+            <tr><td></td><th><u><i>样式选项</i></u></th></tr>
+	        <tr><th>是否自动上色</th>
+              <td><input id="colored"
+                         type="checkbox"
+                         v-model="newParameters.colored">
+            </td></tr>
+            <tr><th>高亮今日</th>
+              <td><input id="today"
+                         type="checkbox"
+                         v-model="newParameters.today">
+                （视时区可能有差异）
+            </td></tr>
+	        <tr><th>字体 <button v-on:click="newParameters.font = ''">取消</button></th>
+              <td>
+                <font-radios v-model="newParameters.font"></font-radios>
             </td></tr>
 	        <tr><th></th><td><button id="generate"
                                      v-on:click="userCommit">
