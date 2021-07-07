@@ -9,6 +9,7 @@ var cacheContents = [
 
 self.addEventListener("install", function(e) {
     console.log("[Service Worker] Install");
+    self.skipWaiting();
     e.waitUntil(
         caches.open(cacheName).then(function(cache) {
             console.log("[Service Worker] Caching contents");
