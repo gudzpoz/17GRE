@@ -1,4 +1,4 @@
-var cacheName = "17grePWA-v0.2.0";
+var cacheName = "17grePWA-v0.2.1";
 var cacheContents = [
     "./",
     "./index.html",
