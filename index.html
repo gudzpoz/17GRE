@@ -15,15 +15,16 @@
 	        </tr>
 	        <tbody v-for="week in weeks">
 	          <tr>
-	            <th v-for="day in week">
-                  <div v-if="day"
-                       :class="'d' + day.date.getFullYear() + '-' + (day.date.getMonth() + 1) + '-' + day.date.getDate()">
+	            <th v-for="day in week"
+                    :class="getDayClass(day)">
+                  <div v-if="day">
                     {{ (day.date.getMonth() + 1) + "/" + day.date.getDate() }}
                   </div>
                 </th>
 	          </tr>
 	          <tr>
-	            <td v-for="day in week">
+	            <td v-for="day in week"
+                    :class="getDayClass(day)">
                   <div v-if="day">
 	                <div v-for="list in day.lists.newLists" :class="'c' + list.replace('~', '')">
                       {{ newListPrefix + " " + list }}<br>

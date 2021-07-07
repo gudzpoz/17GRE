@@ -1,12 +1,17 @@
 #output td, #output th {
 	border: 1px solid black;
-	padding: 0 1em 0 1em;
+	padding: 0 0.5em 0 0.5em;
 }
 #output {
 	border-collapse: collapse;
 }
-#output tr td div {
+#output tr td>div {
+    margin: 0.5em 0 0.5em 0;
+}
+#output tr td div div {
     display: inline;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
 }
 #app {
     margin-left: 2%;

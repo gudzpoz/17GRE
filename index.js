@@ -131,6 +131,14 @@ const app = {
       Object.assign(this.parameters, this.normalizeParameters(newParameters))
     },
 
+    getDayClass (day) {
+      if(day) {
+        return 'd' + day.date.getFullYear() + '-' + (day.date.getMonth() + 1) + '-' + day.date.getDate()
+      } else {
+        return ''
+      }
+    },
+
     normalizeIntegersString (arrayString) {
       try {
         var array = JSON.parse('[' + arrayString + ']')
@@ -323,7 +331,7 @@ const app = {
       if(parameters.colored) {
         for(var i = 0; i != lists.length; ++i) {
           stylesheet.insertRule(
-            '.c' + lists[i].replace('~', '') +
+            'div.c' + lists[i].replace('~', '') +
               ' { background-color: hsl(' + ((i * 97) % 360) + ', 100%, 80%); }',
             0)
         }
@@ -331,10 +339,22 @@ const app = {
       if(parameters.today) {
         var today = new Date()
         stylesheet.insertRule(
-          '.d' + today.getFullYear()
-            + '-' + (today.getMonth() + 1)
-            + '-' + today.getDate()
-            + ' { border: 3px dashed #ff00ff; background-color: yellow; }',
+          '.' + this.getDayClass({date: today})
+            + '{'
+            + 'background: repeating-linear-gradient('
+            + '45deg,'
+            + '#bbb,'
+            + '#bbb 14px,'
+            + 'white 14px,'
+            + 'white 21px'
+            + ');'
+            + '}',
+          0)
+        stylesheet.insertRule(
+          '.' + this.getDayClass({date: today}) + ' div'
+            + '{'
+            + 'background-color: #ffffff80;'
+            + '}',
           0)
       }
     },
