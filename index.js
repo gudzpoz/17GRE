@@ -2,8 +2,18 @@ const defaultIntervals = [0, 1, 3, 7, 14, 29]
 const msPerDay = 24 * 60 * 60 * 1000
 const app = {
   mounted () {
+    if('scrollRestoration' in history) {
+      history.scrollRestoration = 'manual'
+    }
+    window.onpopstate = () => {
+      this.restore()
+      this.commit()
+    }
     this.restore()
     this.commit()
+    if((new URL(window.location)).searchParams.keys.length === 0) {
+      this.updateURL(true)
+    }
   },
 
   data () {
@@ -99,13 +109,13 @@ const app = {
     userCommit () {
       Object.assign(this.parameters, this.normalizeParameters(this.newParameters))
       this.commit()
+      this.updateURL(false)
     },
     commit () {
       this.update(this.parameters)
-      this.updateURL()
     },
 
-    updateURL () {
+    updateURL (replace) {
       var url = new URL(window.location)
       for(var i in this.parameters) {
         if(i === 'date') {
@@ -118,7 +128,11 @@ const app = {
           url.searchParams.set(i, this.parameters[i])
         }
       }
-      window.history.pushState("", this.title, url.href)
+      if(replace) {
+        window.history.replaceState('', this.title, url.href)
+      } else {
+        window.history.pushState('', this.title, url.href)
+      }
     },
 
     restore () {
@@ -164,25 +178,28 @@ const app = {
 
     normalizeParameters (parameters) {
       if(typeof(parameters.reversed) === 'string') {
-        if(parameters.reversed === "true") {
+        if(parameters.reversed === 'true') {
           parameters.reversed = true
         } else {
           parameters.reversed = false
         }
       }
       if(typeof(parameters.colored) === 'string') {
-        if(parameters.colored === "true") {
+        if(parameters.colored === 'true') {
           parameters.colored = true
         } else {
           parameters.colored = false
         }
       }
       if(typeof(parameters.today) === 'string') {
-        if(parameters.today === "true") {
+        if(parameters.today === 'true') {
           parameters.today = true
         } else {
           parameters.today = false
         }
+      }
+      if(typeof(parameters.font) !== 'string') {
+        parameters.font = ''
       }
       parameters.date = new Date(parameters.date)
       if(Number.isNaN(parameters.date.getTime())) {
